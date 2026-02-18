@@ -12,6 +12,8 @@ export type CreateGatheringInput = {
     capacity: number
     category: string
     image_url?: string
+    latitude?: number
+    longitude?: number
 }
 
 export async function createGathering(input: CreateGatheringInput) {
@@ -35,6 +37,8 @@ export async function createGathering(input: CreateGatheringInput) {
             capacity: input.capacity,
             category: input.category,
             image_url: input.image_url,
+            latitude: input.latitude,
+            longitude: input.longitude,
         })
         .select()
         .single()

@@ -51,6 +51,8 @@ export interface Database {
                     category: string | null
                     status: 'recruiting' | 'closed' | 'canceled'
                     created_at: string
+                    latitude: number | null
+                    longitude: number | null
                 }
                 Insert: {
                     id?: number
@@ -64,6 +66,8 @@ export interface Database {
                     category?: string | null
                     status?: 'recruiting' | 'closed' | 'canceled'
                     created_at?: string
+                    latitude?: number | null
+                    longitude?: number | null
                 }
                 Update: {
                     id?: number
@@ -77,6 +81,8 @@ export interface Database {
                     category?: string | null
                     status?: 'recruiting' | 'closed' | 'canceled'
                     created_at?: string
+                    latitude?: number | null
+                    longitude?: number | null
                 }
             }
             participations: {

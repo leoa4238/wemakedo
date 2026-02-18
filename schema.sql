@@ -21,7 +21,9 @@ create table public.gatherings (
   image_url text,
   category text,
   status text default 'recruiting',
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  latitude float8,
+  longitude float8
 );
 
 -- 3. Participations 테이블 생성 (참여 내역)
@@ -46,5 +48,28 @@ create policy "Anyone can view participations." on participations for select usi
 
 -- 6. 로그인한 사용자만 쓰기 가능 정책
 create policy "Users can update own profile." on users for update using ( auth.uid() = id );
+-- [FIX] Allow INSERT for new users (sign up)
+create policy "Enable insert for authenticated users only" on public.users for insert with check ( auth.uid() = id );
+
 create policy "Authenticated users can create gatherings." on gatherings for insert with check ( auth.role() = 'authenticated' );
 create policy "Authenticated users can join." on participations for insert with check ( auth.role() = 'authenticated' );
+
+-- 7. [TRIGGER] Automatically create public.users profile on signup
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.users (id, email, name, avatar_url)
+  values (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'name', 
+    new.raw_user_meta_data->>'avatar_url'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
