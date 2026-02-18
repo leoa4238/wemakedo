@@ -34,12 +34,14 @@ export function GatheringCard({
         minute: "2-digit",
     })
 
+    const isEnded = new Date() > dateObj
+
     return (
         <Link
             href={`/gatherings/${id}`}
             className="group block overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
         >
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <div className={`relative aspect-[16/9] w-full overflow-hidden bg-gray-100 dark:bg-gray-800 ${isEnded ? 'grayscale' : ''}`}>
                 {image_url ? (
                     <Image
                         src={image_url}
@@ -53,15 +55,22 @@ export function GatheringCard({
                         <span className="text-4xl">🏢</span>
                     </div>
                 )}
+                {isEnded && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+                        <span className="transform -rotate-12 rounded-lg border-2 border-white px-4 py-1 text-lg font-bold text-white shadow-lg">
+                            종료됨
+                        </span>
+                    </div>
+                )}
                 {category && (
-                    <div className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-gray-900 shadow-sm backdrop-blur-sm dark:bg-black/50 dark:text-white">
+                    <div className="absolute left-3 top-3 z-20 rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-gray-900 shadow-sm backdrop-blur-sm dark:bg-black/50 dark:text-white">
                         {category}
                     </div>
                 )}
             </div>
 
             <div className="p-4">
-                <h3 className="line-clamp-2 text-lg font-bold text-gray-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                <h3 className={`line-clamp-2 text-lg font-bold ${isEnded ? 'text-gray-500' : 'text-gray-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400'}`}>
                     {title}
                 </h3>
 

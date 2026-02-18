@@ -29,14 +29,16 @@ export async function Header() {
                                     로그아웃
                                 </Button>
                             </form>
-                            <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={user.user_metadata.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
-                                    alt="Profile"
-                                    className="h-full w-full object-cover"
-                                />
-                            </div>
+                            <Link href="/mypage">
+                                <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden hover:opacity-80 transition-opacity">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={user.user_metadata.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
+                                        alt="Profile"
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                            </Link>
                         </div>
                     ) : (
                         <Button asChild variant="default" size="sm">

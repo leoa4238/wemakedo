@@ -1,47 +1,62 @@
-import Link from "next/link"
-import { getGatherings } from "./gatherings/actions"
+import { getGatherings, GatheringFilters } from "./gatherings/actions"
 import { GatheringList } from "@/components/gathering-list"
-import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
-import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { SearchFilters } from "@/components/search-filters"
+import Link from "next/link"
+import { MapPin } from "lucide-react"
 
-export default async function Home() {
-  const gatherings = await getGatherings()
+export const dynamic = 'force-dynamic'
+
+interface HomeProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams
+
+  const filters: GatheringFilters = {
+    category: typeof params.category === 'string' ? params.category : undefined,
+    query: typeof params.query === 'string' ? params.query : undefined,
+    status: params.status === 'open' ? 'open' : undefined,
+  }
+
+  const gatherings = await getGatherings(filters)
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-black">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-black">
       <Header />
 
-      <main className="container mx-auto flex-1 px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-            이번 주 모임
-          </h1>
-          <Button asChild className="hidden sm:flex">
-            <Link href="/gatherings/new">
-              <Plus className="mr-2 h-4 w-4" />
-              모임 만들기
-            </Link>
-          </Button>
+      <main className="container mx-auto px-4 py-8">
+        {/* Hero & Actions */}
+        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              내 주변 소모임 찾기
+            </h1>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              관심사 맞는 동네 친구들과 함께 즐거운 시간을 보내세요!
+            </p>
+          </div>
+          <div className="flex w-full gap-2 md:w-auto">
+            <Button asChild className="flex-1 md:flex-none" variant="outline">
+              <Link href="/gatherings/map">
+                <MapPin className="mr-2 h-4 w-4" />
+                지도보며 찾기
+              </Link>
+            </Button>
+            <Button asChild className="flex-1 md:flex-none">
+              <Link href="/gatherings/new">모임 만들기</Link>
+            </Button>
+          </div>
         </div>
 
+        {/* Search & Filters */}
+        <SearchFilters />
+
+        {/* Gathering List (Client Component for Distance Sorting) */}
         <GatheringList initialGatherings={gatherings} />
-
       </main>
-
-      {/* Mobile Floating Action Button (FAB) */}
-      <div className="fixed bottom-6 right-6 sm:hidden">
-        <Button
-          asChild
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg"
-        >
-          <Link href="/gatherings/new">
-            <Plus className="h-6 w-6" />
-            <span className="sr-only">모임 만들기</span>
-          </Link>
-        </Button>
-      </div>
     </div>
   )
 }

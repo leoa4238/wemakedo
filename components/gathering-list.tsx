@@ -51,21 +51,23 @@ export function GatheringList({ initialGatherings }: GatheringListProps) {
                             console.error("Error getting location:", error);
                             alert("위치 정보를 가져올 수 없습니다. 권한을 확인해주세요.");
                             setSortByDistance(false);
+                            setGatherings(initialGatherings);
                         }
                     );
                 } else {
                     alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
                     setSortByDistance(false);
+                    setGatherings(initialGatherings);
                 }
             } else {
                 // 이미 위치 정보가 있다면 바로 정렬 실행
                 sortGatherings(userLocation);
             }
         } else {
-            // Reset to initial order
+            // 정렬 해제 시 또는 초기 데이터 변경 시 원본 순서로 복구
             setGatherings(initialGatherings);
         }
-    }, [sortByDistance]); // Removed initialGatherings dependecy to avoid infinite loop if reference changes
+    }, [sortByDistance, initialGatherings]);
 
     // [거리순 정렬 함수]
     // geolib 라이브러리의 getDistance 함수를 사용하여 현재 위치와 각 모임 장소 간의 거리 계산

@@ -7,6 +7,7 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/utils/supabase/server"
 import { CommentsSection } from "@/components/comments-section"
 import { LikeButton } from "@/components/like-button"
+import { DeleteGatheringButton } from "@/components/delete-gathering-button"
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic'
@@ -41,6 +42,8 @@ export default async function GatheringDetailPage({ params }: PageProps) {
     const isLiked = likes.some((l: any) => l.user_id === user?.id)
 
     const dateObj = new Date(gathering.meet_at)
+    const isEnded = new Date() > dateObj
+
     const dateStr = dateObj.toLocaleDateString("ko-KR", {
         month: "long",
         day: "numeric",
@@ -63,7 +66,7 @@ export default async function GatheringDetailPage({ params }: PageProps) {
 
             <main className="container mx-auto max-w-4xl px-4 py-8">
                 {/* Image Section */}
-                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 sm:aspect-[21/9]">
+                <div className={`relative aspect-video w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 sm:aspect-[21/9] ${isEnded ? 'grayscale' : ''}`}>
                     {gathering.image_url ? (
                         <Image
                             src={gathering.image_url}
@@ -77,11 +80,18 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                             <span className="text-6xl">🏢</span>
                         </div>
                     )}
-                    <div className="absolute left-4 top-4">
+                    <div className="absolute left-4 top-4 z-20">
                         <span className="rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-sm dark:bg-black/50 dark:text-white">
                             {gathering.category}
                         </span>
                     </div>
+                    {isEnded && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+                            <span className="transform -rotate-12 rounded-xl border-4 border-white px-8 py-2 text-3xl font-bold text-white shadow-2xl">
+                                종료된 모임
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-8 grid gap-8 lg:grid-cols-3">
@@ -99,22 +109,29 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                     isLoggedIn={!!user}
                                 />
                             </div>
-                            <div className="mt-4 flex items-center gap-4">
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                    <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden relative">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={gathering.host?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${gathering.host?.email}`}
-                                            alt={gathering.host?.name || "Host"}
-                                            className="h-full w-full object-cover"
-                                        />
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                        <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={gathering.host?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${gathering.host?.email}`}
+                                                alt={gathering.host?.name || "Host"}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                        <span className="font-medium">{gathering.host?.name}</span>
                                     </div>
-                                    <span className="font-medium">{gathering.host?.name}</span>
+                                    <span className="text-gray-300">|</span>
+                                    <span className="text-sm text-gray-500">
+                                        {new Date(gathering.created_at).toLocaleDateString()} 개설
+                                    </span>
                                 </div>
-                                <span className="text-gray-300">|</span>
-                                <span className="text-sm text-gray-500">
-                                    {new Date(gathering.created_at).toLocaleDateString()} 개설
-                                </span>
+
+                                {/* Delete Button for Host */}
+                                {isHost && (
+                                    <DeleteGatheringButton gatheringId={gathering.id} />
+                                )}
                             </div>
                         </div>
 
@@ -178,7 +195,16 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                             </div>
 
                             <div className="mt-8">
-                                {isJoined ? (
+                                {isEnded ? (
+                                    <div className="space-y-3">
+                                        <Button className="w-full bg-gray-400 hover:bg-gray-400 cursor-not-allowed" disabled size="lg">
+                                            종료된 모임입니다
+                                        </Button>
+                                        <div className="text-center text-sm text-gray-500">
+                                            아쉽지만 다음 기회에 함께해요! 👋
+                                        </div>
+                                    </div>
+                                ) : isJoined ? (
                                     <div className="space-y-3">
                                         <div className="flex w-full items-center justify-center rounded-lg bg-green-50 px-4 py-3 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800">
                                             <span className="font-medium">참여 확정되었습니다! 🎉</span>

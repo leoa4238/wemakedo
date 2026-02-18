@@ -104,10 +104,16 @@ export async function joinGathering(gatheringId: number) {
     revalidatePath(`/gatherings/${gatheringId}`)
 }
 
-// [전체 모임 조회] 최신순으로 모임 목록 가져오기
-export async function getGatherings() {
+// [전체 모임 조회] 필터링 기능을 포함하여 모임 목록 가져오기
+export type GatheringFilters = {
+    category?: string
+    query?: string
+    status?: 'open'
+}
+
+export async function getGatherings(filters?: GatheringFilters) {
     const supabase = await createClient()
-    const { data, error } = await supabase
+    let query = supabase
         .from('gatherings')
         .select(`
       *,
@@ -115,6 +121,27 @@ export async function getGatherings() {
       participations(count) -- 참여자 수 카운트
     `)
         .order('created_at', { ascending: false })
+
+    // 1. 카테고리 필터
+    if (filters?.category && filters.category !== 'all') {
+        query = query.eq('category', filters.category)
+    }
+
+    // 2. 검색어 필터 (제목 또는 내용)
+    if (filters?.query) {
+        query = query.or(`title.ilike.%${filters.query}%,content.ilike.%${filters.query}%`)
+    }
+
+    // 3. 모집 상태 필터 ('open'인 경우 마감되지 않고, 날짜가 지나지 않은 모임만)
+    if (filters?.status === 'open') {
+        const now = new Date().toISOString()
+        // 날짜가 지나지 않은 모임
+        query = query.gt('meet_at', now)
+        // (참여 인원 체크는 DB 쿼리 레벨에서 복잡하므로, 일단 날짜 기준으로만 필터링하거나
+        //  클라이언트에서 처리할 수도 있지만, 여기서는 날짜 기준만 적용)
+    }
+
+    const { data, error } = await query
 
     if (error) {
         console.error('Error fetching gatherings:', error)
@@ -147,4 +174,44 @@ export async function getGathering(id: number) {
     }
 
     return data
+}
+
+// [모임 삭제] 호스트가 자신의 모임을 삭제
+export async function deleteGathering(gatheringId: number) {
+    const supabase = await createClient()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error('User is not authenticated')
+    }
+
+    // 1. 호스트 권한 확인
+    const { data: gathering } = await supabase
+        .from('gatherings')
+        .select('host_id')
+        .eq('id', gatheringId)
+        .single()
+
+    if (!gathering) {
+        throw new Error('Gathering not found')
+    }
+
+    if (gathering.host_id !== user.id) {
+        throw new Error('Only host can delete gathering')
+    }
+
+    // 2. 모임 삭제 (Cascade 설정이 되어 있다면 관련 데이터도 삭제됨)
+    const { error } = await supabase
+        .from('gatherings')
+        .delete()
+        .eq('id', gatheringId)
+
+    if (error) {
+        console.error('Error deleting gathering:', error)
+        throw new Error('Failed to delete gathering')
+    }
+
+    revalidatePath('/')
 }
