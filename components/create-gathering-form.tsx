@@ -15,6 +15,7 @@ export default function CreateGatheringForm() {
     const [latitude, setLatitude] = useState<number | null>(null)
     const [longitude, setLongitude] = useState<number | null>(null)
 
+    // [주소 검색 완료 핸들러] Daum Postcode 팝업에서 주소를 선택했을 때 실행
     const handleComplete = async (data: any) => {
         let fullAddress = data.address;
         let extraAddress = '';
@@ -29,12 +30,13 @@ export default function CreateGatheringForm() {
             fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
         }
 
-        setLocation(fullAddress);
-        setIsAddressModalOpen(false);
+        setLocation(fullAddress); // 선택된 주소 저장
+        setIsAddressModalOpen(false); // 모달 닫기
 
-        // Geocoding (Address -> Coordinates) using Nominatim (OpenStreetMap)
+        // [Geocoding] 주소를 좌표(위도, 경도)로 변환
+        // OpenStreetMap Nominatim API 무료 사용
         try {
-            // User-Agent is required by OSM Nominatim policy
+            // User-Agent 헤더는 Nominatim 정책상 필수
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`, {
                 headers: {
                     'User-Agent': 'WebGatheringApp/1.0'
@@ -42,12 +44,12 @@ export default function CreateGatheringForm() {
             });
             const result = await response.json();
             if (result && result.length > 0) {
-                setLatitude(parseFloat(result[0].lat));
-                setLongitude(parseFloat(result[0].lon));
+                setLatitude(parseFloat(result[0].lat)); // 위도 저장
+                setLongitude(parseFloat(result[0].lon)); // 경도 저장
             }
         } catch (e) {
             console.error("Geocoding failed", e);
-            // Continue without coordinates if geocoding fails
+            // 자표 변환 실패해도 주소는 있으므로 진행 가능
         }
     };
 

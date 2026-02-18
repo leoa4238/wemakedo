@@ -1,10 +1,12 @@
 import { getGathering, joinGathering } from "../actions"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
-import { Calendar, MapPin, Users, MessageSquare } from "lucide-react"
+import { Calendar, MapPin, Users } from "lucide-react"
 import Image from "next/image"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import { createClient } from "@/utils/supabase/server"
+import { CommentsSection } from "@/components/comments-section"
+import { LikeButton } from "@/components/like-button"
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic'
@@ -21,16 +23,22 @@ export default async function GatheringDetailPage({ params }: PageProps) {
         notFound()
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     const {
         data: { user },
-    } = await (await supabase).auth.getUser()
+    } = await supabase.auth.getUser()
 
     // @ts-ignore: participations is joined
     const participations = gathering.participations || []
+    // @ts-ignore: comments is joined
+    const comments = gathering.comments || []
+    // @ts-ignore: likes is joined
+    const likes = gathering.likes || []
+
     const isHost = user?.id === gathering.host_id
     const isJoined = participations.some((p: any) => p.user?.id === user?.id)
     const isFull = participations.length >= gathering.capacity
+    const isLiked = likes.some((l: any) => l.user_id === user?.id)
 
     const dateObj = new Date(gathering.meet_at)
     const dateStr = dateObj.toLocaleDateString("ko-KR", {
@@ -80,9 +88,17 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-                                {gathering.title}
-                            </h1>
+                            <div className="flex items-start justify-between">
+                                <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
+                                    {gathering.title}
+                                </h1>
+                                <LikeButton
+                                    gatheringId={gathering.id}
+                                    initialIsLiked={isLiked}
+                                    initialLikeCount={likes.length}
+                                    isLoggedIn={!!user}
+                                />
+                            </div>
                             <div className="mt-4 flex items-center gap-4">
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden relative">
@@ -108,6 +124,13 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                 {gathering.content}
                             </p>
                         </div>
+
+                        {/* Comments Section */}
+                        <CommentsSection
+                            gatheringId={gathering.id}
+                            comments={comments}
+                            currentUserId={user?.id}
+                        />
                     </div>
 
                     {/* Sidebar / Floating Action Panel */}
@@ -130,7 +153,6 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                         <p className="font-medium text-gray-900 dark:text-white">
                                             {gathering.location}
                                         </p>
-                                        {/* Map view could go here */}
                                     </div>
                                 </div>
 
@@ -161,8 +183,6 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                         <div className="flex w-full items-center justify-center rounded-lg bg-green-50 px-4 py-3 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800">
                                             <span className="font-medium">참여 확정되었습니다! 🎉</span>
                                         </div>
-                                        {/* Chat Link (Only visible to members) */}
-                                        {/* For MVP, we don't have chat link field in DB yet explicitly, but if we did: */}
                                         <div className="text-center text-sm text-gray-500">
                                             모임 시간과 장소를 꼭 확인해주세요.
                                         </div>

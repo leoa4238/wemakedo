@@ -39,6 +39,7 @@ export function GatheringList({ initialGatherings }: GatheringListProps) {
     useEffect(() => {
         if (sortByDistance) {
             if (!userLocation) {
+                // 브라우저의 Geolocation API를 사용하여 현재 위치 가져오기
                 if ('geolocation' in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -57,6 +58,7 @@ export function GatheringList({ initialGatherings }: GatheringListProps) {
                     setSortByDistance(false);
                 }
             } else {
+                // 이미 위치 정보가 있다면 바로 정렬 실행
                 sortGatherings(userLocation);
             }
         } else {
@@ -65,16 +67,18 @@ export function GatheringList({ initialGatherings }: GatheringListProps) {
         }
     }, [sortByDistance]); // Removed initialGatherings dependecy to avoid infinite loop if reference changes
 
+    // [거리순 정렬 함수]
+    // geolib 라이브러리의 getDistance 함수를 사용하여 현재 위치와 각 모임 장소 간의 거리 계산
     const sortGatherings = (location: { latitude: number; longitude: number }) => {
         const sorted = [...initialGatherings].sort((a, b) => {
-            // Gatherings with location come first
+            // 위치 정보가 없는 모임은 뒤로 보냄
             if (!a.latitude || !a.longitude) return 1;
             if (!b.latitude || !b.longitude) return -1;
 
             const distA = getDistance(location, { latitude: a.latitude, longitude: a.longitude });
             const distB = getDistance(location, { latitude: b.latitude, longitude: b.longitude });
 
-            return distA - distB;
+            return distA - distB; // 오름차순 정렬 (가까운 순)
         });
         setGatherings(sorted);
     };

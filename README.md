@@ -22,6 +22,10 @@
     *   **자동 좌표 변환:** 주소 선택 시 OpenStreetMap API를 통해 위도/경도 자동 저장
     *   **내 주변 모임 찾기:** 현재 위치를 기준으로 가까운 순서대로 모임 정렬
 
+*   **커뮤니티 (Community) - [NEW]**
+    *   **댓글 (Comments):** 모임 상세 페이지에서 문의/기대평 남기기
+    *   **찜하기 (Likes):** 관심 있는 모임 즐겨찾기 (하트 버튼)
+
 *   **UI/UX**
     *   모바일 친화적인 반응형 디자인
     *   다크 모드 지원 (시스템 설정 따름)
@@ -60,6 +64,7 @@ Supabase SQL Editor에서 `migrations/` 폴더 내의 스크립트를 순서대�
 1.  **초기 스키마 및 트리거 (필수):** `migrations/fix_user_creation.sql`
     *   *참고:* `schema.sql`은 전체 스키마 참조용입니다.
 2.  **위치 기능 컬럼 추가:** `migrations/add_location_columns.sql`
+3.  **커뮤니티 기능 추가:** `migrations/add_community_features.sql`
 
 ### 4. 개발 서버 실행
 ```bash
