@@ -23,8 +23,15 @@
     *   **내 주변 모임 찾기:** 현재 위치를 기준으로 가까운 순서대로 모임 정렬
 
 *   **커뮤니티 (Community) - [NEW]**
+    *   **참여 승인 시스템:** 호스트 승인 후 참여 확정 (승인/거절/취소 관리)
     *   **댓글 (Comments):** 모임 상세 페이지에서 문의/기대평 남기기
     *   **찜하기 (Likes):** 관심 있는 모임 즐겨찾기 (하트 버튼)
+
+*   **탐색 및 관리 (Discovery & Management) - [NEW]**
+    *   **검색 & 필터:** 키워드 검색, 카테고리별 모아보기, 모집 상태 필터
+    *   **지도 보기:** 지도 상에서 내 주변 모임 위치 확인 (Map View)
+    *   **마이페이지:** 내가 만든 모임, 참여한 모임, 찜한 모임 통합 관리
+    *   **모임 관리:** 호스트의 모임 삭제 및 참여자 관리 기능
 
 *   **UI/UX**
     *   모바일 친화적인 반응형 디자인
@@ -65,6 +72,8 @@ Supabase SQL Editor에서 `migrations/` 폴더 내의 스크립트를 순서대�
     *   *참고:* `schema.sql`은 전체 스키마 참조용입니다.
 2.  **위치 기능 컬럼 추가:** `migrations/add_location_columns.sql`
 3.  **커뮤니티 기능 추가:** `migrations/add_community_features.sql`
+4.  **참여 승인 시스템:** `migrations/add_approval_system.sql`
+5.  **모임 삭제 정책(선택):** `migrations/fix_delete_policy.sql`
 
 ### 4. 개발 서버 실행
 ```bash

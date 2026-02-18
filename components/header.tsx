@@ -1,29 +1,30 @@
 import Link from "next/link"
 import { createClient } from "@/utils/supabase/server"
 import { Button } from "./ui/button"
+import { BackButton } from "./back-button"
 
 export async function Header() {
-    const supabase = createClient()
+    const supabase = await createClient()
     const {
         data: { user },
-    } = await (await supabase).auth.getUser()
+    } = await supabase.auth.getUser()
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                <Link href="/" className="flex items-center gap-2 text-lg font-bold">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-                        W
-                    </div>
-                    <span>WorkLife</span>
-                </Link>
+                <div className="flex items-center gap-2">
+                    <BackButton />
+                    <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                            W
+                        </div>
+                        <span>WorkLife</span>
+                    </Link>
+                </div>
 
                 <div className="flex items-center gap-4">
                     {user ? (
                         <div className="flex items-center gap-3">
-                            {/* <span className="text-sm font-medium hidden sm:inline-block">
-                {user.user_metadata.full_name || user.email?.split('@')[0]}
-              </span> */}
                             <form action="/auth/signout" method="post">
                                 <Button variant="ghost" size="sm">
                                     로그아웃

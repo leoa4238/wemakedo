@@ -1,4 +1,6 @@
-import { getGathering, joinGathering } from "../actions"
+import { getGathering, joinGathering, cancelApplication, getApplications } from "../actions"
+import { ApplicationList } from "@/components/application-list"
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Users } from "lucide-react"
@@ -58,6 +60,31 @@ export default async function GatheringDetailPage({ params }: PageProps) {
     async function joinAction() {
         "use server"
         await joinGathering(parseInt(id))
+    }
+
+    async function cancelAction() {
+        "use server"
+        await cancelApplication(parseInt(id))
+    }
+
+    // Check application status & fetch applications
+    let hasApplied = false
+    let applications: any[] = []
+
+    if (user) {
+        if (!isHost) {
+            // Check if user has applied
+            const { data } = await supabase
+                .from('gathering_applications')
+                .select('id')
+                .eq('gathering_id', gathering.id)
+                .eq('user_id', user.id)
+                .single()
+            hasApplied = !!data
+        } else {
+            // Fetch applications for host
+            applications = await getApplications(gathering.id)
+        }
     }
 
     return (
@@ -200,38 +227,47 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                         <Button className="w-full bg-gray-400 hover:bg-gray-400 cursor-not-allowed" disabled size="lg">
                                             종료된 모임입니다
                                         </Button>
-                                        <div className="text-center text-sm text-gray-500">
-                                            아쉽지만 다음 기회에 함께해요! 👋
-                                        </div>
                                     </div>
                                 ) : isJoined ? (
                                     <div className="space-y-3">
                                         <div className="flex w-full items-center justify-center rounded-lg bg-green-50 px-4 py-3 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800">
                                             <span className="font-medium">참여 확정되었습니다! 🎉</span>
                                         </div>
-                                        <div className="text-center text-sm text-gray-500">
-                                            모임 시간과 장소를 꼭 확인해주세요.
-                                        </div>
+                                    </div>
+                                ) : isHost ? (
+                                    <div className="flex w-full items-center justify-center rounded-lg bg-blue-50 px-4 py-3 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                                        <span className="font-medium">호스트입니다 😎</span>
                                     </div>
                                 ) : isFull ? (
                                     <Button className="w-full" disabled size="lg">
                                         모집 마감
                                     </Button>
+                                ) : hasApplied ? (
+                                    <form action={cancelAction}>
+                                        <Button type="submit" variant="outline" className="w-full border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700 dark:border-orange-800 dark:text-orange-400" size="lg">
+                                            승인 대기중 (신청 취소) ⏳
+                                        </Button>
+                                    </form>
                                 ) : user ? (
                                     <form action={joinAction}>
                                         <Button type="submit" className="w-full" size="lg">
-                                            참여하기
+                                            참여 신청하기 ✋
                                         </Button>
                                     </form>
                                 ) : (
                                     <Button asChild className="w-full" size="lg">
-                                        <a href={`/login?next=/gatherings/${id}`}>로그인하고 참여하기</a>
+                                        <Link href={`/login?next=/gatherings/${id}`}>로그인하고 참여하기</Link>
                                     </Button>
                                 )}
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Application Management for Host */}
+                {isHost && applications.length > 0 && (
+                    <ApplicationList gatheringId={gathering.id} initialApplications={applications} />
+                )}
             </main>
         </div>
     )

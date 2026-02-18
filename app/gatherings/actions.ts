@@ -73,6 +73,7 @@ export async function createGathering(input: CreateGatheringInput) {
 }
 
 // [모임 참여] 현재 유저가 특정 모임에 참여 신청
+// [모임 참여 신청] 호스트는 즉시 참여, 게스트는 승인 대기
 export async function joinGathering(gatheringId: number) {
     const supabase = await createClient()
     const {
@@ -83,25 +84,102 @@ export async function joinGathering(gatheringId: number) {
         redirect('/login')
     }
 
-    // participations 테이블에 유저-모임 관계 추가
-    // DB의 unique(user_id, gathering_id) 제약조건으로 중복 참여 방지됨
-    const { error } = await supabase.from('participations').insert({
-        user_id: user.id,
-        gathering_id: gatheringId,
-        status: 'joined', // MVP에서는 즉시 참여 승인
-    })
+    // 1. 호스트인지 확인
+    const { data: gathering } = await supabase
+        .from('gatherings')
+        .select('host_id')
+        .eq('id', gatheringId)
+        .single()
 
-    if (error) {
-        console.error('Error joining gathering:', error)
-        if (error.code === '23505') {
-            // Unique constraint violation (이미 참여함)
-            throw new Error('Already joined')
+    if (!gathering) throw new Error('Gathering not found')
+
+    if (gathering.host_id === user.id) {
+        // 호스트는 즉시 참여 처리
+        const { error } = await supabase.from('participations').insert({
+            user_id: user.id,
+            gathering_id: gatheringId,
+            status: 'joined',
+        })
+        if (error) throw new Error('Failed to join as host')
+    } else {
+        // 게스트는 신청서 제출 (gathering_applications)
+        const { error } = await supabase.from('gathering_applications').insert({
+            user_id: user.id,
+            gathering_id: gatheringId,
+        })
+
+        if (error) {
+            if (error.code === '23505') { // Unique constraint violation
+                throw new Error('Already applied')
+            }
+            throw new Error('Failed to apply')
         }
-        throw new Error('Failed to join gathering')
     }
 
-    // 상세 페이지 데이터 갱신 (참여 인원 업데이트)
     revalidatePath(`/gatherings/${gatheringId}`)
+}
+
+// [신청 취소] 대기 중인 신청 취소
+export async function cancelApplication(gatheringId: number) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    await supabase
+        .from('gathering_applications')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('gathering_id', gatheringId)
+
+    revalidatePath(`/gatherings/${gatheringId}`)
+}
+
+// [신청 승인] 호스트가 신청자 승인 -> participations로 이동
+export async function approveApplication(gatheringId: number, targetUserId: string) {
+    const supabase = await createClient()
+
+    // 1. Participations에 추가
+    const { error: joinError } = await supabase.from('participations').insert({
+        user_id: targetUserId,
+        gathering_id: gatheringId,
+        status: 'joined'
+    })
+
+    if (joinError) throw new Error('Failed to approve')
+
+    // 2. Applications에서 삭제
+    await supabase.from('gathering_applications').delete()
+        .eq('user_id', targetUserId)
+        .eq('gathering_id', gatheringId)
+
+    revalidatePath(`/gatherings/${gatheringId}`)
+}
+
+// [신청 거절] 호스트가 신청자 거절 -> applications에서 삭제
+export async function rejectApplication(gatheringId: number, targetUserId: string) {
+    const supabase = await createClient()
+
+    await supabase.from('gathering_applications').delete()
+        .eq('user_id', targetUserId)
+        .eq('gathering_id', gatheringId)
+
+    revalidatePath(`/gatherings/${gatheringId}`)
+}
+
+// [신청자 목록 조회] 호스트용
+export async function getApplications(gatheringId: number) {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('gathering_applications')
+        .select(`
+            *,
+            user:users(*)
+        `)
+        .eq('gathering_id', gatheringId)
+        .order('created_at', { ascending: true })
+
+    if (error) return []
+    return data
 }
 
 // [전체 모임 조회] 필터링 기능을 포함하여 모임 목록 가져오기
@@ -118,7 +196,7 @@ export async function getGatherings(filters?: GatheringFilters) {
         .select(`
       *,
       host:users(name, avatar_url),
-      participations(count) -- 참여자 수 카운트
+      participations(count)
     `)
         .order('created_at', { ascending: false })
 
@@ -169,7 +247,10 @@ export async function getGathering(id: number) {
         .single()
 
     if (error) {
-        console.error('Error fetching gathering:', error)
+        if (error.code === 'PGRST116') {
+            return null
+        }
+        console.error('Error fetching gathering:', JSON.stringify(error, null, 2))
         return null
     }
 
