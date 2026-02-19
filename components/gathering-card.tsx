@@ -1,5 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
+import { getCategoryLabel } from "@/lib/constants"
 import { Calendar, MapPin, Users } from "lucide-react"
 
 type GatheringCardProps = {
@@ -64,7 +65,7 @@ export function GatheringCard({
                 )}
                 {category && (
                     <div className="absolute left-3 top-3 z-20 rounded-md bg-white/90 px-2 py-1 text-xs font-semibold text-gray-900 shadow-sm backdrop-blur-sm dark:bg-black/50 dark:text-white">
-                        {category}
+                        {getCategoryLabel(category)}
                     </div>
                 )}
             </div>

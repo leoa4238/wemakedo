@@ -126,7 +126,7 @@ export function ChatMessageList({
                     >
                         {!isMe && !isContinuous && (
                             <div className="mr-2 h-8 w-8 rounded-full bg-gray-200 overflow-hidden shrink-0 mt-1">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
+
                                 <img
                                     src={message.user?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${message.user_id}`}
                                     alt={message.user?.name || "User"}

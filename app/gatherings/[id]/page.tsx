@@ -11,6 +11,7 @@ import { CommentsSection } from "@/components/comments-section"
 import { LikeButton } from "@/components/like-button"
 import { DeleteGatheringButton } from "@/components/delete-gathering-button"
 import { ChatDrawer } from "@/components/chat/chat-drawer"
+import { getCategoryLabel } from "@/lib/constants"
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic'
@@ -110,7 +111,7 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                     )}
                     <div className="absolute left-4 top-4 z-20">
                         <span className="rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-sm dark:bg-black/50 dark:text-white">
-                            {gathering.category}
+                            {getCategoryLabel(gathering.category)}
                         </span>
                     </div>
                     {isEnded && (
@@ -141,7 +142,6 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                         <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden relative">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={gathering.host?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${gathering.host?.email}`}
                                                 alt={gathering.host?.name || "Host"}

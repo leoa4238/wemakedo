@@ -1,4 +1,6 @@
 import { getGatherings, GatheringFilters } from "./gatherings/actions"
+import { getLunchGatherings } from "./gatherings/lightning-actions"
+import { HomeContent } from "@/components/home-content"
 import { GatheringList } from "@/components/gathering-list"
 import { GatheringCard } from "@/components/gathering-card"
 import { Header } from "@/components/header"
@@ -28,6 +30,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const mainGatherings = await getGatherings(filters)
   // Only fetch new gatherings if not searching
   const newGatherings = !isSearching ? await getGatherings({ limit: 4 }) : []
+  const lunchGatherings = await getLunchGatherings()
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-black">
@@ -114,11 +117,13 @@ export default async function Home({ searchParams }: HomeProps) {
             </div>
           )}
 
-          {/* Search & Filters */}
-          <SearchFilters />
+          <HomeContent lunchGatherings={lunchGatherings}>
+            {/* Search & Filters */}
+            <SearchFilters />
 
-          {/* Gathering List */}
-          <GatheringList initialGatherings={mainGatherings} />
+            {/* Gathering List */}
+            <GatheringList initialGatherings={mainGatherings} />
+          </HomeContent>
         </section>
       </main>
     </div>

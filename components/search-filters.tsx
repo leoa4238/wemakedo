@@ -12,6 +12,7 @@ import {
 import { Search } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { CATEGORIES } from "@/lib/constants"
 import { useDebounce } from "use-debounce"
 
 // [검색 및 필터 컴포넌트]
@@ -59,13 +60,11 @@ export function SearchFilters() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">전체</SelectItem>
-                        <SelectItem value="문화/예술">문화/예술</SelectItem>
-                        <SelectItem value="운동/액티비티">운동/액티비티</SelectItem>
-                        <SelectItem value="푸드/드링크">푸드/드링크</SelectItem>
-                        <SelectItem value="취미">취미</SelectItem>
-                        <SelectItem value="여행">여행</SelectItem>
-                        <SelectItem value="성장/자기계발">성장/자기계발</SelectItem>
-                        <SelectItem value="동네/친목">동네/친목</SelectItem>
+                        {CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                                {cat.icon} {cat.label}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>

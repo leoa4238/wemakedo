@@ -38,7 +38,7 @@ export default async function MyPage({ searchParams }: PageProps) {
                 {/* 1. 프로필 섹션 */}
                 <div className="mb-12 flex flex-col items-center justify-center space-y-4 text-center">
                     <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-lg dark:border-gray-800">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+
                         <img
                             src={profile?.avatar_url || user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
                             alt={profile?.name || user.user_metadata?.name || "User"}

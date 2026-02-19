@@ -64,7 +64,7 @@ export function ApplicationList({ gatheringId, initialApplications }: Applicatio
                     <div key={app.id} className="flex items-center justify-between rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-200">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
+
                                 <img
                                     src={app.user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${app.user_id}`}
                                     alt={app.user.name || "User"}

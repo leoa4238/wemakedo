@@ -52,7 +52,7 @@ export default async function EditProfilePage() {
                         {/* Avatar Section */}
                         <div className="flex flex-col items-center space-y-4">
                             <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-gray-100 dark:border-gray-800">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
+
                                 <img
                                     src={initialData.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
                                     alt="Profile"
