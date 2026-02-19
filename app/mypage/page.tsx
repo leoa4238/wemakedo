@@ -25,7 +25,7 @@ export default async function MyPage({ searchParams }: PageProps) {
         redirect('/login?next=/mypage')
     }
 
-    const { user, hosted, joined, liked } = data
+    const { user, profile, hosted, joined, liked } = data
 
     // 현재 탭에 맞는 데이터 선택
     const currentList = tab === 'hosted' ? hosted : tab === 'joined' ? joined : liked
@@ -40,16 +40,30 @@ export default async function MyPage({ searchParams }: PageProps) {
                     <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-lg dark:border-gray-800">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
-                            alt={user.user_metadata?.name || "User"}
+                            src={profile?.avatar_url || user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
+                            alt={profile?.name || user.user_metadata?.name || "User"}
                             className="h-full w-full object-cover"
                         />
                     </div>
-                    <div>
+                    <div className="flex flex-col items-center gap-1">
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {user.user_metadata?.name || user.email?.split('@')[0]}
+                            {profile?.name || user.user_metadata?.name || user.email?.split('@')[0]}
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
+
+                        {(profile?.company || profile?.job_title) && (
+                            <div className="mt-1 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                {profile?.company && <span>{profile.company}</span>}
+                                {profile?.company && profile?.job_title && <span>·</span>}
+                                {profile?.job_title && <span>{profile.job_title}</span>}
+                            </div>
+                        )}
+
+                        <Button asChild variant="outline" size="sm" className="mt-3">
+                            <Link href="/mypage/edit">
+                                프로필 수정
+                            </Link>
+                        </Button>
                     </div>
                 </div>
 
@@ -59,8 +73,8 @@ export default async function MyPage({ searchParams }: PageProps) {
                         <Link
                             href="/mypage?tab=hosted"
                             className={`flex items-center gap-2 border-b-2 py-4 px-1 text-sm font-medium ${tab === 'hosted'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                 }`}
                         >
                             <User className="h-4 w-4" />
@@ -73,8 +87,8 @@ export default async function MyPage({ searchParams }: PageProps) {
                         <Link
                             href="/mypage?tab=joined"
                             className={`flex items-center gap-2 border-b-2 py-4 px-1 text-sm font-medium ${tab === 'joined'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                 }`}
                         >
                             <Calendar className="h-4 w-4" />
@@ -87,8 +101,8 @@ export default async function MyPage({ searchParams }: PageProps) {
                         <Link
                             href="/mypage?tab=liked"
                             className={`flex items-center gap-2 border-b-2 py-4 px-1 text-sm font-medium ${tab === 'liked'
-                                    ? 'border-red-500 text-red-600 dark:text-red-400'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                ? 'border-red-500 text-red-600 dark:text-red-400'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                 }`}
                         >
                             <Heart className="h-4 w-4" />

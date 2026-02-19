@@ -14,6 +14,13 @@ export async function getUserData() {
         throw new Error('User not authenticated')
     }
 
+    // 0. Public Profile 조회
+    const { data: publicProfile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
     // 1. 내가 만든 모임 (Hosted)
     // gatherings 테이블에서 host_id가 내 ID인 항목 조회
     const { data: hosted } = await supabase
@@ -57,6 +64,7 @@ export async function getUserData() {
 
     return {
         user,
+        profile: publicProfile, // Add profile data
         hosted: hosted || [],
         // joined와 liked는 구조가 다르므로 gathering 객체만 추출하여 매핑
         joined: joined?.map((d: any) => d.gathering) || [],

@@ -19,7 +19,6 @@ export type CreateGatheringInput = {
 // [모임 생성] 새로운 모임을 DB에 생성하고 주최자를 참여자로 등록
 export async function createGathering(input: CreateGatheringInput) {
     const supabase = await createClient()
-    // 현재 세션의 유저 정보 가져오기
     const {
         data: { user },
     } = await supabase.auth.getUser()
@@ -40,8 +39,8 @@ export async function createGathering(input: CreateGatheringInput) {
             capacity: input.capacity,
             category: input.category,
             image_url: input.image_url,
-            latitude: input.latitude, // 위치 좌표 (위도)
-            longitude: input.longitude, // 위치 좌표 (경도)
+            latitude: input.latitude,
+            longitude: input.longitude,
         })
         .select()
         .single()
@@ -52,7 +51,6 @@ export async function createGathering(input: CreateGatheringInput) {
     }
 
     // 2. 주최자(Host)를 자동으로 참여자 목록(participations)에 추가
-    // 주최자가 모임의 첫 번째 멤버가 됨
     const { error: participationError } = await supabase
         .from('participations')
         .insert({
@@ -63,13 +61,62 @@ export async function createGathering(input: CreateGatheringInput) {
 
     if (participationError) {
         console.error('Error adding host to participants:', participationError)
-        // 치명적인 오류는 아니므로 로그만 남김
     }
 
-    // 메인 페이지 데이터 갱신 (새 모임 표시)
     revalidatePath('/')
-    // 생성된 상세 페이지로 이동
-    redirect(`/gatherings/${gatheringData.id}`)
+    return { id: gatheringData.id }
+}
+
+// [모임 수정] 호스트가 모임 정보 수정
+export async function updateGathering(id: number, input: CreateGatheringInput) {
+    const supabase = await createClient()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error('User is not authenticated')
+    }
+
+    // 1. 호스트 권한 확인
+    const { data: gathering } = await supabase
+        .from('gatherings')
+        .select('host_id')
+        .eq('id', id)
+        .single()
+
+    if (!gathering) {
+        throw new Error('Gathering not found')
+    }
+
+    if (gathering.host_id !== user.id) {
+        throw new Error('Only host can update gathering')
+    }
+
+    // 2. 모임 정보 업데이트
+    const { error } = await supabase
+        .from('gatherings')
+        .update({
+            title: input.title,
+            content: input.content,
+            location: input.location,
+            meet_at: input.meet_at,
+            capacity: input.capacity,
+            category: input.category,
+            image_url: input.image_url,
+            latitude: input.latitude,
+            longitude: input.longitude,
+        })
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error updating gathering:', error)
+        throw new Error('Failed to update gathering')
+    }
+
+    revalidatePath('/')
+    revalidatePath(`/gatherings/${id}`)
+    return { id }
 }
 
 // [모임 참여] 현재 유저가 특정 모임에 참여 신청
@@ -187,6 +234,7 @@ export type GatheringFilters = {
     category?: string
     query?: string
     status?: 'open'
+    limit?: number
 }
 
 export async function getGatherings(filters?: GatheringFilters) {
@@ -217,6 +265,11 @@ export async function getGatherings(filters?: GatheringFilters) {
         query = query.gt('meet_at', now)
         // (참여 인원 체크는 DB 쿼리 레벨에서 복잡하므로, 일단 날짜 기준으로만 필터링하거나
         //  클라이언트에서 처리할 수도 있지만, 여기서는 날짜 기준만 적용)
+    }
+
+    // 4. 개수 제한
+    if (filters?.limit) {
+        query = query.limit(filters.limit)
     }
 
     const { data, error } = await query

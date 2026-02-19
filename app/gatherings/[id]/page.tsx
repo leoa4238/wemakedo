@@ -3,13 +3,14 @@ import { ApplicationList } from "@/components/application-list"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
-import { Calendar, MapPin, Users } from "lucide-react"
+import { Calendar, MapPin, Users, Edit } from "lucide-react"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { createClient } from "@/utils/supabase/server"
 import { CommentsSection } from "@/components/comments-section"
 import { LikeButton } from "@/components/like-button"
 import { DeleteGatheringButton } from "@/components/delete-gathering-button"
+import { ChatDrawer } from "@/components/chat/chat-drawer"
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic'
@@ -156,8 +157,17 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                 </div>
 
                                 {/* Delete Button for Host */}
+                                {/* Edit & Delete Button for Host */}
                                 {isHost && (
-                                    <DeleteGatheringButton gatheringId={gathering.id} />
+                                    <div className="flex gap-2">
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={`/gatherings/${gathering.id}/edit`}>
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                수정
+                                            </Link>
+                                        </Button>
+                                        <DeleteGatheringButton gatheringId={gathering.id} />
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -267,6 +277,18 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                 {/* Application Management for Host */}
                 {isHost && applications.length > 0 && (
                     <ApplicationList gatheringId={gathering.id} initialApplications={applications} />
+                )}
+
+                {/* Chat Feature */}
+                {(isHost || isJoined) && user && (
+                    <ChatDrawer
+                        gatheringId={gathering.id}
+                        currentUser={{
+                            id: user.id,
+                            name: user.user_metadata.name || user.email?.split('@')[0],
+                            avatar_url: user.user_metadata.avatar_url
+                        }}
+                    />
                 )}
             </main>
         </div>

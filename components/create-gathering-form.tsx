@@ -1,28 +1,54 @@
 'use client'
 
-import { createGathering } from "@/app/gatherings/actions"
+import { createGathering, updateGathering } from "@/app/gatherings/actions"
 import { Button } from "@/components/ui/button"
 import { useState, useRef } from "react"
 import { Calendar, Loader2, MapPin, Search, Users, ArrowLeft } from "lucide-react"
 import DaumPostcode from 'react-daum-postcode';
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
-export default function CreateGatheringForm() {
+interface CreateGatheringFormProps {
+    initialData?: {
+        title: string
+        category: string
+        meet_at: string
+        location: string
+        latitude: number | null
+        longitude: number | null
+        capacity: number
+        image_url: string | null
+        content: string | null
+    }
+    gatheringId?: number
+    mode?: 'create' | 'edit'
+}
+
+export default function CreateGatheringForm({
+    initialData,
+    gatheringId,
+    mode = 'create'
+}: CreateGatheringFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
     const [isPreview, setIsPreview] = useState(false)
 
     // Form State
-    const [title, setTitle] = useState("")
-    const [category, setCategory] = useState("networking")
-    const [date, setDate] = useState("")
-    const [time, setTime] = useState("")
-    const [location, setLocation] = useState("")
-    const [latitude, setLatitude] = useState<number | null>(null)
-    const [longitude, setLongitude] = useState<number | null>(null)
-    const [capacity, setCapacity] = useState("4")
-    const [imageUrl, setImageUrl] = useState("")
-    const [content, setContent] = useState("")
+    // Initialize date and time from meet_at if available
+    const initialDate = initialData?.meet_at ? new Date(initialData.meet_at).toISOString().split('T')[0] : ""
+    const initialTime = initialData?.meet_at ? new Date(initialData.meet_at).toTimeString().slice(0, 5) : ""
+
+    // Form State
+    const [title, setTitle] = useState(initialData?.title || "")
+    const [category, setCategory] = useState(initialData?.category || "networking")
+    const [date, setDate] = useState(initialDate)
+    const [time, setTime] = useState(initialTime)
+    const [location, setLocation] = useState(initialData?.location || "")
+    const [latitude, setLatitude] = useState<number | null>(initialData?.latitude || null)
+    const [longitude, setLongitude] = useState<number | null>(initialData?.longitude || null)
+    const [capacity, setCapacity] = useState(initialData?.capacity?.toString() || "4")
+    const [imageUrl, setImageUrl] = useState(initialData?.image_url || "")
+    const [content, setContent] = useState(initialData?.content || "")
 
     // [주소 검색 완료 핸들러]
     const handleComplete = async (data: any) => {
@@ -58,6 +84,8 @@ export default function CreateGatheringForm() {
         }
     };
 
+    const router = useRouter()
+
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         setIsSubmitting(true)
@@ -70,17 +98,33 @@ export default function CreateGatheringForm() {
 
             const meet_at = new Date(`${date}T${time}`).toISOString()
 
-            await createGathering({
-                title,
-                category,
-                location,
-                meet_at,
-                capacity: parseInt(capacity),
-                content,
-                image_url: imageUrl,
-                latitude: latitude || undefined,
-                longitude: longitude || undefined
-            })
+            if (mode === 'edit' && gatheringId) {
+                await updateGathering(gatheringId, {
+                    title,
+                    category,
+                    location,
+                    meet_at,
+                    capacity: parseInt(capacity),
+                    content,
+                    image_url: imageUrl,
+                    latitude: latitude || undefined,
+                    longitude: longitude || undefined
+                })
+                router.push(`/gatherings/${gatheringId}`)
+            } else {
+                const result = await createGathering({
+                    title,
+                    category,
+                    location,
+                    meet_at,
+                    capacity: parseInt(capacity),
+                    content,
+                    image_url: imageUrl,
+                    latitude: latitude || undefined,
+                    longitude: longitude || undefined
+                })
+                router.push(`/gatherings/${result.id}`)
+            }
         } catch (error) {
             console.error(error)
             alert("모임 생성 중 오류가 발생했습니다.")
@@ -102,7 +146,7 @@ export default function CreateGatheringForm() {
     return (
         <div className="container mx-auto max-w-2xl px-4 py-8">
             <h1 className="mb-8 text-2xl font-bold text-gray-900 dark:text-white">
-                새 모임 만들기
+                {mode === 'edit' ? "모임 수정하기" : "새 모임 만들기"}
             </h1>
 
             {isPreview ? (
@@ -362,7 +406,7 @@ export default function CreateGatheringForm() {
                                     생성 중...
                                 </>
                             ) : (
-                                "모임 개설하기"
+                                mode === 'edit' ? "수정하기" : "모임 개설하기"
                             )}
                         </Button>
                     </div>

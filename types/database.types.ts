@@ -108,6 +108,29 @@ export interface Database {
                     created_at?: string
                 }
             }
+            chat_messages: {
+                Row: {
+                    id: number
+                    gathering_id: number
+                    user_id: string
+                    content: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    gathering_id: number
+                    user_id: string
+                    content: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    gathering_id?: number
+                    user_id?: string
+                    content?: string
+                    created_at?: string
+                }
+            }
         }
     }
 }
