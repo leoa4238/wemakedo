@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server"
 import { Button } from "./ui/button"
 import { BackButton } from "./back-button"
 import { UserNav } from "./user-nav"
+import { NotificationBell } from "./notifications/notification-bell"
 import { MapPinned } from "lucide-react"
 
 export async function Header() {
@@ -35,7 +36,10 @@ export async function Header() {
                     </Button>
 
                     {user ? (
-                        <UserNav user={user} />
+                        <div className="flex items-center gap-2">
+                            <NotificationBell userId={user.id} />
+                            <UserNav user={user} />
+                        </div>
                     ) : (
                         <Button asChild variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
                             <Link href="/login">로그인</Link>

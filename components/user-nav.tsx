@@ -35,6 +35,23 @@ export function UserNav({ user }: UserNavProps) {
         router.refresh()
     }
 
+    const [mannerScore, setMannerScore] = useState<number>(36.5)
+
+    useEffect(() => {
+        async function fetchMannerScore() {
+            const { data } = await supabase
+                .from('users')
+                .select('manner_score')
+                .eq('id', user.id)
+                .single()
+
+            if (data?.manner_score) {
+                setMannerScore(data.manner_score)
+            }
+        }
+        fetchMannerScore()
+    }, [user.id, supabase])
+
     const avatarUrl = user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`
     const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User"
 
@@ -57,6 +74,15 @@ export function UserNav({ user }: UserNavProps) {
                     <div className="px-4 py-3">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userName}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                        <div className="mt-2 flex items-center gap-2">
+                            <span className="text-xs font-semibold text-orange-500">🌡️ {mannerScore.toFixed(1)}°C</span>
+                            <div className="h-1.5 flex-1 rounded-full bg-gray-100 dark:bg-gray-700">
+                                <div
+                                    className="h-full rounded-full bg-gradient-to-r from-orange-300 to-red-500 transition-all duration-500"
+                                    style={{ width: `${Math.min(100, (mannerScore / 100) * 100)}%` }}
+                                />
+                            </div>
+                        </div>
                     </div>
                     <div className="py-1">
                         <Link

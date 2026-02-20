@@ -12,6 +12,7 @@ interface Application {
     user: {
         name: string | null
         avatar_url: string | null
+        participations?: { count: number }[]
     }
 }
 
@@ -72,8 +73,14 @@ export function ApplicationList({ gatheringId, initialApplications }: Applicatio
                                 />
                             </div>
                             <div>
-                                <p className="font-semibold text-gray-900 dark:text-white">
+                                <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                     {app.user.name || "익명 사용자"}
+                                    {/* Newbie Badge: Check if participation count is 0 */}
+                                    {(!app.user.participations || app.user.participations[0]?.count === 0) && (
+                                        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            🌱 뉴비
+                                        </span>
+                                    )}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                     {new Date(app.created_at).toLocaleDateString()} 신청

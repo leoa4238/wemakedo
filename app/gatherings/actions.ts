@@ -199,6 +199,17 @@ export async function approveApplication(gatheringId: number, targetUserId: stri
         .eq('user_id', targetUserId)
         .eq('gathering_id', gatheringId)
 
+    // 3. 알림 생성
+    const { data: gathering } = await supabase.from('gatherings').select('title').eq('id', gatheringId).single()
+    if (gathering) {
+        await supabase.from('notifications').insert({
+            user_id: targetUserId,
+            type: 'APPROVAL',
+            content: `'${gathering.title}' 참여가 승인되었습니다! 🎉`,
+            link_url: `/gatherings/${gatheringId}`
+        })
+    }
+
     revalidatePath(`/gatherings/${gatheringId}`)
 }
 
@@ -210,6 +221,17 @@ export async function rejectApplication(gatheringId: number, targetUserId: strin
         .eq('user_id', targetUserId)
         .eq('gathering_id', gatheringId)
 
+    // 알림 생성
+    const { data: gathering } = await supabase.from('gatherings').select('title').eq('id', gatheringId).single()
+    if (gathering) {
+        await supabase.from('notifications').insert({
+            user_id: targetUserId,
+            type: 'REJECTION',
+            content: `'${gathering.title}' 참여가 거절되었습니다. 🥲`,
+            link_url: `/gatherings/${gatheringId}`
+        })
+    }
+
     revalidatePath(`/gatherings/${gatheringId}`)
 }
 
@@ -220,7 +242,8 @@ export async function getApplications(gatheringId: number) {
         .from('gathering_applications')
         .select(`
             *,
-            user:users(*)
+            *,
+            user:users(*, participations(count))
         `)
         .eq('gathering_id', gatheringId)
         .order('created_at', { ascending: true })
@@ -288,7 +311,7 @@ export async function getGathering(id: number) {
         .from('gatherings')
         .select(`
       *,
-      host:users(name, avatar_url),
+      host:users(name, avatar_url, manner_score),
       participations(user:users(*)),
       comments(
         id, content, created_at, user_id,

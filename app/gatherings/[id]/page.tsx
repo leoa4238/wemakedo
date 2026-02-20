@@ -1,4 +1,5 @@
 import { getGathering, joinGathering, cancelApplication, getApplications } from "../actions"
+import { getMyReviewsEx } from "@/app/reviews/actions"
 import { ApplicationList } from "@/components/application-list"
 import Link from "next/link"
 import { Header } from "@/components/header"
@@ -12,6 +13,7 @@ import { LikeButton } from "@/components/like-button"
 import { DeleteGatheringButton } from "@/components/delete-gathering-button"
 import { ChatDrawer } from "@/components/chat/chat-drawer"
 import { getCategoryLabel } from "@/lib/constants"
+import { MannerReviewModal } from "@/components/manner-review-modal"
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic'
@@ -88,6 +90,8 @@ export default async function GatheringDetailPage({ params }: PageProps) {
             applications = await getApplications(gathering.id)
         }
     }
+
+    const myReviews = user ? await getMyReviewsEx(gathering.id) : []
 
     return (
         <div className="flex min-h-screen flex-col bg-white dark:bg-black">
@@ -243,6 +247,12 @@ export default async function GatheringDetailPage({ params }: PageProps) {
                                         <div className="flex w-full items-center justify-center rounded-lg bg-green-50 px-4 py-3 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800">
                                             <span className="font-medium">참여 확정되었습니다! 🎉</span>
                                         </div>
+                                        <MannerReviewModal
+                                            gatheringId={gathering.id}
+                                            currentUserId={user?.id || ""}
+                                            participations={participations}
+                                            initialCompletedIds={myReviews.map((r: any) => r.reviewee_id)}
+                                        />
                                     </div>
                                 ) : isHost ? (
                                     <div className="flex w-full items-center justify-center rounded-lg bg-blue-50 px-4 py-3 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-200 dark:border-blue-800">

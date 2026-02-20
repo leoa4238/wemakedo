@@ -17,6 +17,7 @@ export interface Database {
                     avatar_url: string | null
                     company: string | null
                     job_title: string | null
+                    manner_score: number
                     created_at: string
                 }
                 Insert: {
@@ -128,6 +129,61 @@ export interface Database {
                     gathering_id?: number
                     user_id?: string
                     content?: string
+                    created_at?: string
+                }
+            }
+            user_reviews: {
+                Row: {
+                    id: number
+                    reviewer_id: string
+                    reviewee_id: string
+                    gathering_id: number
+                    score: number
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    reviewer_id: string
+                    reviewee_id: string
+                    gathering_id: number
+                    score: number
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    reviewer_id?: string
+                    reviewee_id?: string
+                    gathering_id?: number
+                    score?: number
+                    created_at?: string
+                }
+            }
+            notifications: {
+                Row: {
+                    id: number
+                    user_id: string
+                    type: string
+                    content: string
+                    link_url: string | null
+                    is_read: boolean
+                    created_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id: string
+                    type: string
+                    content: string
+                    link_url?: string | null
+                    is_read?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    type?: string
+                    content?: string
+                    link_url?: string | null
+                    is_read?: boolean
                     created_at?: string
                 }
             }
